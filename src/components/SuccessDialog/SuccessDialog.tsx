@@ -1,6 +1,6 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import Lottie from "lottie-react";
-import SuccessAnimation from "../../../assets/lotties/Success.json";
+import SuccessAnimation from "@/assets/lotties/Success.json";
 
 interface SuccessDialogProps {
   isOpen: boolean;

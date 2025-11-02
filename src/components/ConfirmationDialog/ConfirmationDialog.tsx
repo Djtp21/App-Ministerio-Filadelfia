@@ -1,6 +1,7 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import Lottie from "lottie-react";
-import AlertAnimation from "../../../assets/lotties/Alert.json";
+import AlertAnimation from "@/assets/lotties/Alert.json";
+
 
 interface ConfirmationDialogProps {
   isOpen: boolean;
@@ -182,4 +183,3 @@ export const ConfirmationDialog = ({
     </Dialog.Root>
   );
 };
-

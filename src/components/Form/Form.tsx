@@ -13,6 +13,7 @@ export const Form = ({ onBack }: FormProps) => {
   const [formData, setFormData] = useState({
     nombre: "",
     apellido: "",
+    cedula: "",
     edad: "",
     telefono: "",
     correo: "",
@@ -50,6 +51,7 @@ export const Form = ({ onBack }: FormProps) => {
     setFormData({
       nombre: "",
       apellido: "",
+      cedula: "",
       edad: "",
       telefono: "",
       correo: "",
@@ -96,6 +98,17 @@ export const Form = ({ onBack }: FormProps) => {
               required
             />
           </div>
+
+          <Input
+            label="Cédula de Identidad"
+            type="text"
+            value={formData.cedula}
+            onChange={(e) =>
+              setFormData({ ...formData, cedula: e.target.value })
+            }
+            placeholder="V-12345678"
+            required
+          />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input

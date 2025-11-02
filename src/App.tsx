@@ -1,35 +1,46 @@
 import { useState } from "react";
 import Confetti from "react-confetti";
 import { useWindowSize } from "react-use";
-import { LogoFiladelfia } from "../assets/SVG/LogoFila";
+import { LogoFiladelfia } from "./assets/SVG/LogoFila";
 import { Modal } from "./components/Modal/Modal";
 import { Form } from "./components/Form/Form";
+import { Asistence } from "./Asistence";
 
 export const App = () => {
   const { width, height } = useWindowSize();
-  const [viewForm, setViewForm] = useState(false);
+  const [currentView, setCurrentView] = useState<'home' | 'form' | 'asistence'>('home');
 
   const handleContinue = () => {
-    setViewForm(true);
+    setCurrentView('form');
+  };
+
+  const handleAsistence = () => {
+    setCurrentView('asistence');
   };
 
   const handleBack = () => {
-    setViewForm(false);
+    setCurrentView('home');
   };
 
-  // Si viewForm es true, muestra el formulario
-  if (viewForm) {
+  // Si currentView es 'form', muestra el formulario
+  if (currentView === 'form') {
     return <Form onBack={handleBack} />;
+  }
+
+  // Si currentView es 'asistence', muestra la página de asistencia
+  if (currentView === 'asistence') {
+    return <Asistence onBack={handleBack} />;
   }
 
   // Si viewForm es false, muestra la página de bienvenida
   return (
-    <div className="flex justify-center flex-col items-center bg-blue-100 w-screen h-screen">
+    <div className="flex justify-center flex-col items-center bg-[#dee2e6] w-screen h-screen">
       <Confetti
         width={width}
         height={height}
         numberOfPieces={500}
         recycle={false}
+        colors={['#F4D35E', '#28AFB0', '118ab2']}
       />
 
       <LogoFiladelfia />
@@ -43,6 +54,14 @@ export const App = () => {
         </p>
       </div>
       <Modal onContinue={handleContinue} />
+    <button 
+        onClick={handleAsistence}
+        className="mt-4 px-7 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all"
+        style={{ backgroundColor: '#2768F5', color: '#ffffff' }}
+      >
+        Registrar Asistencia
+      </button>
+
     </div>
   );
 };
