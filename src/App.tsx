@@ -39,8 +39,11 @@ export default function App() {
     return (
       <main style={{
         minHeight: '100vh',
+        width: '100vw',
         backgroundColor: '#f3f4f6',
-        padding: '24px 16px'
+        padding: '24px 16px',
+        boxSizing: 'border-box',
+        overflowX: 'hidden'
       }}>
         <Admin />
       </main>

@@ -28,7 +28,12 @@ export default function Admin() {
   const section = getSection()
 
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+    <div style={{ 
+      maxWidth: '1200px', 
+      width: '100%',
+      margin: '0 auto',
+      boxSizing: 'border-box'
+    }}>
       {/* Header */}
       <div style={{
         backgroundColor: '#ffffff',
@@ -134,6 +139,7 @@ export default function Admin() {
           backgroundColor: '#ffffff',
           borderRadius: '12px',
           padding: '24px',
+          width: '100%',
           boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
           border: '1px solid #e5e7eb'
         }}>
