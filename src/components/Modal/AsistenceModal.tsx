@@ -24,17 +24,22 @@ export const AsistenceModal = ({ onRegisterRedirect, actividadId }: AsistenceMod
   const [notRegistered, setNotRegistered] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [foundPerson, setFoundPerson] = useState<Persona | null>(null);
+  const [lastRegistered, setLastRegistered] = useState<boolean | undefined>(undefined);
 
-  const extractAsistirResult = (resp: any) => {
+  const extractAsistirResult = (resp: unknown) => {
     if (!resp) return { registered: undefined as boolean | undefined, message: undefined as string | undefined };
-    if (typeof resp.registered === 'boolean' || typeof resp.message === 'string') {
-      return { registered: resp.registered as boolean | undefined, message: resp.message as string | undefined };
+    const asRec = resp as Record<string, unknown>;
+    if (typeof asRec.registered === 'boolean' || typeof asRec.message === 'string') {
+      return { registered: asRec.registered as boolean | undefined, message: asRec.message as string | undefined };
     }
-    if (resp.data && (typeof resp.data.registered === 'boolean' || typeof resp.data.message === 'string')) {
-      return { registered: resp.data.registered as boolean | undefined, message: resp.data.message as string | undefined };
+    if (asRec.data && typeof asRec.data === 'object') {
+      const asData = (asRec.data as Record<string, unknown>)
+      if (typeof asData.registered === 'boolean' || typeof asData.message === 'string') {
+        return { registered: asData.registered as boolean | undefined, message: asData.message as string | undefined };
+      }
     }
     return { registered: undefined as boolean | undefined, message: undefined as string | undefined };
-  }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,25 +56,8 @@ export const AsistenceModal = ({ onRegisterRedirect, actividadId }: AsistenceMod
       if (persons.length > 0) {
         // show only the first matching record and wait for user confirmation to mark attendance
         const persona = persons[0] as Persona
-        // if actividadId prop provided, register immediately against that activity
-        if (actividadId) {
-          try {
-            const resp = await asistirActividad(actividadId, persona._id)
-            const { registered, message: backendMsg } = extractAsistirResult(resp)
-            if (registered === false) {
-              setMessage(backendMsg || `La persona ya estaba registrada en esta clase.`)
-            } else {
-              setMessage(backendMsg || `Asistencia registrada para ${persona.nombreCompleto ?? persona._id}`)
-              setShowSuccess(true)
-            }
-          } catch (err) {
-            console.error('Error registrando asistencia directa:', err)
-            setMessage('No se pudo registrar la asistencia automáticamente.')
-          }
-        } else {
-          setFoundPerson(persona)
-          setMessage(null)
-        }
+        setFoundPerson(persona)
+        setMessage(null)
       } else {
         // not registered: prepare redirect to form with prefill
         setNotRegistered(true)
@@ -87,6 +75,8 @@ export const AsistenceModal = ({ onRegisterRedirect, actividadId }: AsistenceMod
     setShowSuccess(false);
     setCedula("");
     setIsOpen(false);
+    setLastRegistered(undefined);
+    setMessage(null);
   };
 
   const handleRedirectToForm = () => {
@@ -109,27 +99,33 @@ export const AsistenceModal = ({ onRegisterRedirect, actividadId }: AsistenceMod
     setIsLoading(true)
     setMessage(null)
     try {
-      const today = new Date();
-      const yyyy = today.getFullYear();
-      const mm = String(today.getMonth() + 1).padStart(2, '0');
-      const dd = String(today.getDate()).padStart(2, '0');
-      const fechaHoy = `${yyyy}-${mm}-${dd}`
-      const actividades = await getActividadesSemana({ fecha: fechaHoy })
-      const list = Array.isArray(actividades) ? actividades : []
-      if (list.length === 0) {
-        setMessage('No hay actividades programadas para hoy.')
-        return
+      // choose actividad: prefer actividadId prop, otherwise pick today's first actividad
+      let actividadToUse: string | undefined = actividadId;
+      if (!actividadToUse) {
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        const fechaHoy = `${yyyy}-${mm}-${dd}`
+        const actividades = await getActividadesSemana({ fecha: fechaHoy })
+        const list = Array.isArray(actividades) ? actividades : []
+        if (list.length === 0) {
+          setMessage('No hay actividades programadas para hoy.')
+          return
+        }
+        actividadToUse = list[0]._id
       }
-      const resp = await asistirActividad(list[0]._id, persona._id)
-      const r = resp as unknown as Record<string, unknown>
-      const registeredFlag = typeof r.registered === 'boolean' ? r.registered : undefined
-      const backendMsg = typeof r.message === 'string' ? r.message : undefined
+      const resp = await asistirActividad(actividadToUse, persona._id)
+      const { registered: registeredFlag, message: backendMsg } = extractAsistirResult(resp)
+      console.debug('asistirActividad response:', { resp, registeredFlag, backendMsg })
+      setLastRegistered(registeredFlag as boolean | undefined)
       const pObj = persona as unknown as Record<string, unknown>
       const displayName = typeof pObj.nombreCompleto === 'string'
         ? pObj.nombreCompleto
         : `${String(pObj.nombre ?? '')} ${String(pObj.apellido ?? '')}`.trim()
       if (registeredFlag === false) {
         setMessage(backendMsg || `La persona ${displayName || persona._id} ya estaba registrada para esta clase.`)
+        setShowSuccess(true)
       } else {
         setMessage(backendMsg || `Asistencia registrada para ${displayName || persona._id}.`)
         setShowSuccess(true)
@@ -224,8 +220,8 @@ export const AsistenceModal = ({ onRegisterRedirect, actividadId }: AsistenceMod
       <SuccessDialog
         isOpen={showSuccess}
         onClose={handleCloseSuccess}
-        title="¡Asistencia Registrada!"
-        message="Tu asistencia ha sido registrada exitosamente. ¡Gracias por estar presente!"
+        title={lastRegistered === false ? "Asistencia existente" : "¡Asistencia Registrada!"}
+        message={message || (lastRegistered === false ? "La persona ya estaba registrada en esta clase." : "Tu asistencia ha sido registrada exitosamente. ¡Gracias por estar presente!")}
       />
     </>
   );
