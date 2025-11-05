@@ -1,16 +1,31 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/Input/Input";
 import { DatePicker } from "@/components/DatePicker/DatePicker";
 import { createPersona, getActividadesSemana, asistirActividad, getPersonas, type Persona } from "@/services/Api";
 import { SuccessDialog } from "@/components/SuccessDialog/SuccessDialog";
 
+export type FormInitialData = Partial<{
+  nombre: string;
+  apellido: string;
+  cedula: string;
+  telefono: string;
+  correo: string;
+  fechaNacimiento: Date | undefined;
+  bautizado: boolean;
+  genero: string;
+  ministerio: string;
+  nivel_academico: string;
+  ocupacion: string;
+}>;
+
 interface FormProps {
   onBack: () => void;
+  initialData?: FormInitialData;
 }
 
-export const Form = ({ onBack }: FormProps) => {
-  const [formData, setFormData] = useState({
+export const Form = ({ onBack, initialData }: FormProps) => {
+  const defaultState = {
     nombre: "",
     apellido: "",
     cedula: "",
@@ -23,12 +38,28 @@ export const Form = ({ onBack }: FormProps) => {
     ministerio: "",
     nivel_academico: "",
     ocupacion: "",
-  });
+  };
+
+  const [formData, setFormData] = useState(() => ({ ...defaultState, ...(initialData || {}) }));
   const [showSuccess, setShowSuccess] = useState(false);
   const [successName, setSuccessName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<string, string>>>({});
+
+  // If another flow stored prefill data (e.g. AsistenceModal), consume it on mount
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem('prefill_persona');
+      if (raw) {
+        const parsed = JSON.parse(raw) as Record<string, string>;
+        setFormData((prev) => ({ ...prev, ...(initialData || {}), ...parsed }));
+        sessionStorage.removeItem('prefill_persona');
+      }
+    } catch {
+      // ignore parse errors
+    }
+  }, [initialData]);
 
   // --- Phone and Cedula helpers (store digits; format for display) ---
   const formatPhoneDisplay = (digits: string) => {
@@ -209,19 +240,7 @@ Se ha registrado tu asistencia para el día de hoy 🎉`;
     setSuccessName("");
     
     // Limpiar el formulario
-    setFormData({
-      nombre: "",
-      apellido: "",
-      cedula: "",
-      telefono: "",
-      correo: "",
-      fechaNacimiento: undefined,
-      bautizado: false,
-      genero: "",
-      ministerio: "",
-      nivel_academico: "",
-      ocupacion: "",
-    });
+    setFormData({ ...defaultState });
     
     // Volver a la página principal
     onBack();

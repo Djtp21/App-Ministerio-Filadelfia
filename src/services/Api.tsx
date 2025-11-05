@@ -66,8 +66,10 @@ export interface GetActividadesSemanaParams {
 }
 
 export interface AsistenciaResponse {
-  message: string;
-  actividad: Actividad;
+  message?: string;
+  actividad?: Actividad;
+  // registered: whether the person was newly marked as attended (true) or was already registered (false)
+  registered?: boolean;
 }
 
 interface ApiError extends Error {
@@ -185,16 +187,18 @@ export async function getActividadesSemana(
   return [];
 }
 
-export function asistirActividad(
+export async function asistirActividad(
   id: string,
   personaId: string
-): Promise<AsistenciaResponse> {
+): Promise<ApiEnvelope<AsistenciaResponse> | AsistenciaResponse> {
   if (!id) throw new Error("Clase id requerido");
   if (!personaId) throw new Error("personaId requerido");
-  return request<AsistenciaResponse>(`/actividades/${id}/asistir`, {
+  const res = await request<ApiEnvelope<AsistenciaResponse>>(`/actividades/${id}/asistir`, {
     method: "POST",
     body: JSON.stringify({ personaId }),
   });
+  // return the envelope so callers can inspect 'registered' and 'message'
+  return res as ApiEnvelope<AsistenciaResponse>;
 }
 
 export default {

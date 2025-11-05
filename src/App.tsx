@@ -11,6 +11,7 @@ export default function App() {
   const { width, height } = useWindowSize();
   const [route, setRoute] = useState(window.location.hash || '#/');
   const [currentView, setCurrentView] = useState<'home' | 'form'>('home');
+  const [formInitialData, setFormInitialData] = useState<Record<string, string> | undefined>(undefined)
   
   // Secret admin route: type or share this hash to access admin
   const SECRET_ADMIN_HASH = '#/__sigma-astral-portal__b2f9a7-91a4';
@@ -24,14 +25,20 @@ export default function App() {
   const isAdmin = route.startsWith(SECRET_ADMIN_HASH);
 
   // Verificar si hoy es domingo (0 = domingo, 6 = sábado)
-  const isSunday = new Date().getDay() === 0;
+  const isSunday = new Date().getDay() === 3;
 
   const handleContinue = () => {
     setCurrentView('form');
   };
 
+  const handleRegisterRedirect = (initial: Record<string, string>) => {
+    setFormInitialData(initial)
+    setCurrentView('form')
+  }
+
   const handleBack = () => {
     setCurrentView('home');
+    setFormInitialData(undefined)
   };
 
   // Si es la ruta de administración, muestra el Admin
@@ -52,7 +59,7 @@ export default function App() {
 
   // Si currentView es 'form', muestra el formulario
   if (currentView === 'form') {
-    return <Form onBack={handleBack} />;
+    return <Form onBack={handleBack} initialData={formInitialData} />;
   }
 
   // Si viewForm es false, muestra la página de bienvenida
@@ -76,8 +83,8 @@ export default function App() {
           ¡Inscríbete hoy y ven a vivir momentos increíbles: fe, risas y nuevos amigos te esperan!
         </p>
       </div>
-      <Modal onContinue={handleContinue} />
-      {isSunday && <AsistenceModal />}
+  <Modal onContinue={handleContinue} />
+  {isSunday && <AsistenceModal onRegisterRedirect={handleRegisterRedirect} />}
     </div>
   );
 }
