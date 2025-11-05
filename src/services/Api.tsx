@@ -102,7 +102,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   return data as T;
 }
 
-export function getPersonas(
+export async function getPersonas(
   params: GetPersonasParams = {}
 ): Promise<PaginatedResponse<Persona>> {
   const { cedula, nombreCompleto, currentPage, limit } = params;
@@ -113,7 +113,33 @@ export function getPersonas(
   if (limit) searchParams.set("limit", String(limit));
 
   const qp = searchParams.toString();
-  return request<PaginatedResponse<Persona>>(`/personas${qp ? `?${qp}` : ""}`);
+  const res = await request<ApiEnvelope<PaginatedResponse<Persona>> | Persona[]>(`/personas${qp ? `?${qp}` : ""}`);
+
+  // If backend returned an envelope with .data (paginated), return it
+  if (res && typeof res === 'object' && Array.isArray((res as ApiEnvelope).data)) {
+    return (res as ApiEnvelope<PaginatedResponse<Persona>>).data as PaginatedResponse<Persona>;
+  }
+
+  // If backend returned a plain array of personas, synthesize a PaginatedResponse
+  if (Array.isArray(res)) {
+    const arr = res as Persona[];
+    return {
+      data: arr,
+      currentPage: 1,
+      totalPages: 1,
+      totalItems: arr.length,
+      limit: arr.length,
+    } as PaginatedResponse<Persona>;
+  }
+
+  // Fallback empty
+  return {
+    data: [],
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0,
+    limit: 0,
+  };
 }
 
 export async function createPersona(payload: CreatePersonaPayload): Promise<Persona> {
