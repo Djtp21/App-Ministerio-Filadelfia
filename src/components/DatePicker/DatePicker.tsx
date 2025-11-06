@@ -39,20 +39,27 @@ export function DatePicker({ selected, onSelect, placeholder = "Selecciona una f
         <Button
           variant="outline"
           data-empty={!selected}
-          className="data-[empty=true]:text-muted-foreground w-[280px] justify-start text-left font-normal"
+          className="data-[empty=true]:text-muted-foreground w-full md:w-[280px] justify-start text-left font-normal"
         >
-          <CalendarIcon />
-          {selected ? format(selected, "PPP", { locale: es }) : <span>{placeholder}</span>}
+          <CalendarIcon className="mr-2 h-4 w-4 flex-shrink-0" />
+          <span className="truncate">
+            {selected ? format(selected, "PPP", { locale: es }) : <span>{placeholder}</span>}
+          </span>
         </Button>
       </PopoverTrigger>
       <PopoverContent 
         className="w-auto p-0" 
+        align="start"
+        side="bottom"
+        sideOffset={4}
+        avoidCollisions={false}
         style={{ 
           backgroundColor: '#ffffff',
           border: '1px solid #e5e7eb',
           fontSize: '0.875rem',
           // allow the custom month/year popovers to overflow the popover container
-          overflow: 'visible'
+          overflow: 'visible',
+          zIndex: 50
         }}
       >
   <div style={{ position: 'relative' }}>
@@ -63,10 +70,32 @@ export function DatePicker({ selected, onSelect, placeholder = "Selecciona una f
                 <PopoverTrigger asChild>
                   <button type="button" style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontWeight: 700 }}>{viewMonth.toLocaleString('es-ES', { month: 'long' })}</button>
                 </PopoverTrigger>
-                <PopoverContent side="bottom" align="start" style={{ background: '#fff', border: '1px solid #e5e7eb', padding: 8, borderRadius: 6, zIndex: 60 }}>
+                <PopoverContent 
+                  side="bottom" 
+                  align="start" 
+                  style={{ 
+                    background: '#fff', 
+                    border: '1px solid #e5e7eb', 
+                    padding: 8, 
+                    borderRadius: 6, 
+                    zIndex: 60,
+                    maxWidth: '90vw'
+                  }}
+                >
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
                     {Array.from({ length: 12 }).map((_, i) => (
-                      <button key={i} onClick={() => setViewMonth(new Date(viewMonth.getFullYear(), i, 1))} style={{ padding: '6px 8px', borderRadius: 6, border: i === viewMonth.getMonth() ? '1px solid #2768F5' : '1px solid transparent', background: i === viewMonth.getMonth() ? '#eef2ff' : 'transparent', cursor: 'pointer' }}>
+                      <button 
+                        key={i} 
+                        onClick={() => setViewMonth(new Date(viewMonth.getFullYear(), i, 1))} 
+                        style={{ 
+                          padding: '6px 8px', 
+                          borderRadius: 6, 
+                          border: i === viewMonth.getMonth() ? '1px solid #2768F5' : '1px solid transparent', 
+                          background: i === viewMonth.getMonth() ? '#eef2ff' : 'transparent', 
+                          cursor: 'pointer',
+                          fontSize: '0.75rem'
+                        }}
+                      >
                         {new Date(0, i).toLocaleString('es-ES', { month: 'short' })}
                       </button>
                     ))}
@@ -80,21 +109,55 @@ export function DatePicker({ selected, onSelect, placeholder = "Selecciona una f
                 <PopoverTrigger asChild>
                   <button type="button" style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontWeight: 700 }}>{viewMonth.getFullYear()}</button>
                 </PopoverTrigger>
-                <PopoverContent side="bottom" align="center" style={{ background: '#fff', border: '1px solid #e5e7eb', padding: 8, borderRadius: 6, zIndex: 60 }}>
+                <PopoverContent 
+                  side="bottom" 
+                  align="center" 
+                  style={{ 
+                    background: '#fff', 
+                    border: '1px solid #e5e7eb', 
+                    padding: 8, 
+                    borderRadius: 6, 
+                    zIndex: 60,
+                    maxWidth: '90vw'
+                  }}
+                >
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
                     {Array.from({ length: 12 }).map((_, i) => {
                       const yearBlockStart = Math.floor(viewMonth.getFullYear() / 12) * 12;
                       const y = yearBlockStart + i;
                       return (
-                        <button key={y} onClick={() => setViewMonth(new Date(y, viewMonth.getMonth(), 1))} style={{ padding: '6px 8px', borderRadius: 6, border: y === viewMonth.getFullYear() ? '1px solid #2768F5' : '1px solid transparent', background: y === viewMonth.getFullYear() ? '#eef2ff' : 'transparent', cursor: 'pointer' }}>
+                        <button 
+                          key={y} 
+                          onClick={() => setViewMonth(new Date(y, viewMonth.getMonth(), 1))} 
+                          style={{ 
+                            padding: '6px 8px', 
+                            borderRadius: 6, 
+                            border: y === viewMonth.getFullYear() ? '1px solid #2768F5' : '1px solid transparent', 
+                            background: y === viewMonth.getFullYear() ? '#eef2ff' : 'transparent', 
+                            cursor: 'pointer',
+                            fontSize: '0.75rem'
+                          }}
+                        >
                           {y}
                         </button>
                       );
                     })}
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
-                    <button type="button" onClick={() => setViewMonth(new Date(viewMonth.getFullYear() - 12, viewMonth.getMonth(), 1))} style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>«</button>
-                    <button type="button" onClick={() => setViewMonth(new Date(viewMonth.getFullYear() + 12, viewMonth.getMonth(), 1))} style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>»</button>
+                    <button 
+                      type="button" 
+                      onClick={() => setViewMonth(new Date(viewMonth.getFullYear() - 12, viewMonth.getMonth(), 1))} 
+                      style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '0.875rem' }}
+                    >
+                      «
+                    </button>
+                    <button 
+                      type="button" 
+                      onClick={() => setViewMonth(new Date(viewMonth.getFullYear() + 12, viewMonth.getMonth(), 1))} 
+                      style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '0.875rem' }}
+                    >
+                      »
+                    </button>
                   </div>
                 </PopoverContent>
               </Popover>
@@ -105,21 +168,21 @@ export function DatePicker({ selected, onSelect, placeholder = "Selecciona una f
             mode="single" 
             selected={selected} 
             onSelect={onSelect}
-            className="rounded-md text-sm scale-90"
+            className="rounded-md text-sm"
             captionLayout="label"
             classNames={{ caption_label: 'invisible' }}
             month={viewMonth}
             onMonthChange={(d) => setViewMonth(d)}
             startMonth={startMonth}
             endMonth={endMonth}
-          locale={es}
-          defaultMonth={selected || new Date(1990, 0)}
-          formatters={{
-            formatMonthDropdown: (date) =>
-              date.toLocaleString("es-ES", { month: "long" }),
-            formatYearDropdown: (date) => date.getFullYear().toString(),
-          }}
-        />
+            locale={es}
+            defaultMonth={selected || new Date(1990, 0)}
+            formatters={{
+              formatMonthDropdown: (date) =>
+                date.toLocaleString("es-ES", { month: "long" }),
+              formatYearDropdown: (date) => date.getFullYear().toString(),
+            }}
+          />
         </div>
       </PopoverContent>
     </Popover>
