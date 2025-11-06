@@ -134,12 +134,11 @@ export const Form = ({ onBack, initialData }: FormProps) => {
     try {
       // clear previous field errors
       setFieldErrors({});
-  setIsSubmitting(true);
-  const created: unknown = await createPersona(payload);
-  // Dev logs: payload sent and response received from createPersona
-  // Useful to debug whether backend returns _id and to inspect server errors
-  // (remove or guard these logs in production)
-  console.log("createPersona payload:", payload, "response:", created);
+      setIsSubmitting(true);
+      const created: unknown = await createPersona(payload);
+      // Dev logs: payload sent and response received from createPersona
+      // Useful to debug whether backend returns _id and to inspect server errors
+      // (remove or guard these logs in production)
       // extract name from response if present (type-safe)
       let nameToShow = formData.nombre || "";
       if (created && typeof created === "object") {
@@ -163,11 +162,7 @@ export const Form = ({ onBack, initialData }: FormProps) => {
         const mm = String(today.getMonth() + 1).padStart(2, "0");
         const dd = String(today.getDate()).padStart(2, "0");
         const fechaHoy = `${yyyy}-${mm}-${dd}`;
-  // Dev log: fecha usada para consultar actividades
-  console.log("fechaHoy (local):", fechaHoy);
         const actividades = await getActividadesSemana({ fecha: fechaHoy });
-  // Dev log: actividades recibidas
-  console.log("actividades for fechaHoy:", actividades);
         if (Array.isArray(actividades) && actividades.length > 0) {
           const actividad = actividades[0];
           // created should contain the persona id returned by createPersona
@@ -179,7 +174,6 @@ export const Form = ({ onBack, initialData }: FormProps) => {
               if (ced) {
                 const found = await getPersonas({ cedula: ced });
                 // Dev log: resultado de buscar persona por cédula
-                console.log("getPersonas lookup result for cedula", ced, found);
                 if (found && Array.isArray(found.data) && found.data.length > 0) {
                   personaId = found.data[0]._id;
                 }
@@ -189,17 +183,26 @@ export const Form = ({ onBack, initialData }: FormProps) => {
             }
           }
 
-          // Dev log: personaId que usaremos para registrar asistencia (si existe)
-          console.log("personaId resolved:", personaId);
-
           if (personaId) {
             try {
-              // Dev log: antes de la llamada a asistirActividad
-              console.log("attempting asistirActividad with actividadId:", actividad._id, "personaId:", personaId);
-              await asistirActividad(actividad._id, personaId);
-              // append joyful attendance confirmation
-              base = `${base} \n
-Se ha registrado tu asistencia para el día de hoy 🎉`;
+              const asistirResp = await asistirActividad(actividad._id, personaId);
+              // Try to extract a human message from the response (may be top-level or under .data)
+              let attendanceMessage: string | undefined;
+              if (asistirResp && typeof asistirResp === 'object') {
+                const ar = asistirResp as Record<string, unknown>;
+                if (typeof ar.message === 'string') attendanceMessage = ar.message;
+                else if (ar.data && typeof ar.data === 'object') {
+                  const d = ar.data as Record<string, unknown>;
+                  if (typeof d.message === 'string') attendanceMessage = d.message;
+                }
+              }
+              // If backend returns a message that starts with 'Gracias' (or '¡Gracias'), strip it to avoid repeating the thank-you.
+              if (attendanceMessage) {
+                attendanceMessage = attendanceMessage.replace(/^\s*¡?Gracias[.,!\s-]*/i, '').trim();
+              }
+              if (attendanceMessage) {
+                base = `${base}\n¡Y por asistir a la clase de hoy!`;
+              }
             } catch (attErr) {
               console.error('No se pudo registrar la asistencia automaticamente:', attErr);
               // do not block success; optionally notify user later
