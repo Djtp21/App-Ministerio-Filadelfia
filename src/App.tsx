@@ -16,7 +16,7 @@ export default function App() {
   const [actividadActual, setActividadActual] = useState<Actividad | null>(null);
   
   // Secret admin route: type or share this hash to access admin
-  const SECRET_ADMIN_HASH = '#/__sigma-astral-portal__b2f9a7-91a4';
+  const SECRET_ADMIN_HASH = '#/__sigma-astral-portal__c3d4e2-4f10';
 
   useEffect(() => {
     const onHashChange = () => setRoute(window.location.hash || '#/');
